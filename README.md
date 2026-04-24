@@ -1,67 +1,81 @@
 # MDB-rs
 
-Rust rewrite of the MillenniumDB QUAD model for learning and experimentation.
+Rust rewrite of the full MillenniumDB system with only the QUAD model variant.
 
 ## Goals
 
-1. Rebuild the QUAD model core in Rust with clear module boundaries.
-2. Preserve query-facing behavior where practical, while starting with a Rust-native internal format.
-3. Learn Rust development systematically through documentation-first milestones and tests-first implementation.
+1. Rebuild the full MillenniumDB architecture in Rust while supporting only the QUAD model.
+2. Preserve core query and update behavior from MillenniumDB for QUAD workloads.
+3. Deliver a maintainable, modular Rust codebase with clear boundaries and testable contracts.
 
 ## Non-Goals (Initial Phase)
 
-1. Full feature parity with the whole MillenniumDB server.
-2. Binary-compatible on-disk format in milestone 1.
-3. Performance tuning before semantic correctness is stable.
+1. Multi-model support (RDF, Property Graph, GQL variants beyond QUAD).
+2. Perfect binary compatibility in early milestones.
+3. Early performance tuning before semantic correctness and reliability are stable.
 
 ## Scope of This Rewrite
 
-Included in phase 1:
+Included in full-system scope:
 
-1. ObjectId and value model (encoding classes and comparison contract).
-2. Quad index permutations for core edge matching patterns.
-3. Import pipeline for initial dataset ingestion.
-4. Minimal query path for deterministic read scenarios.
-5. Documentation and test scaffolding before production code.
+1. Core data model and ObjectId/value semantics for QUAD.
+2. Storage and index subsystem for quad permutations.
+3. Import and export pipelines.
+4. Query parser, planner, and executor for QUAD-relevant features.
+5. Update execution path with correctness guarantees.
+6. CLI and server runtime.
+7. System metadata, catalog lifecycle, and operational tooling.
+8. Evaluation and regression test infrastructure.
 
-Out of scope in phase 1:
+Out of scope for this repository:
 
-1. Full transaction engine.
-2. Advanced optimizer internals.
-3. Complete CLI/server parity.
+1. Non-QUAD model implementations.
+2. Experimental features not required for QUAD parity.
 
 ## Step-by-Step Plan
 
 ### Phase 0: Baseline
 
 1. Create repository documentation skeleton and design contracts.
-2. Define milestone acceptance criteria.
-3. Add test catalog before implementation.
+2. Define full-system milestone acceptance criteria.
+3. Add cross-layer test catalog before implementation.
 
 ### Phase 1: Behavior Contracts
 
 1. Lock down ObjectId invariants and value ordering contract.
 2. Specify quad index permutation semantics and consistency rules.
-3. Define parser error categories and expected diagnostics.
+3. Define import, query, update, and runtime error contracts.
 
-### Phase 2: Crate and Module Design
+### Phase 2: System Architecture and Crate Design
 
-1. Define workspace structure and dependency direction.
-2. Assign responsibility per module with explicit public API boundaries.
-3. Create traceability matrix from MillenniumDB components to MDB-rs modules.
+1. Define workspace structure for all major MillenniumDB subsystems.
+2. Assign crate ownership for storage, query, update, import/export, cli, and server.
+3. Create traceability matrix from MillenniumDB components to MDB-rs crates.
 
-### Phase 3: First Implementable Slice
+### Phase 3: Core Engine Foundation
 
 1. Implement ObjectId/value types and round-trip checks.
-2. Implement in-memory quad index permutations.
-3. Wire parser smoke path and minimal read query path.
-4. Run deterministic tests on small fixtures.
+2. Implement initial quad index engine and catalog metadata.
+3. Wire import path and deterministic storage tests.
+4. Validate recovery and integrity checks in local fixtures.
 
-### Phase 4: Stabilization
+### Phase 4: Query and Update Stack
 
-1. Expand behavior tests and negative tests.
-2. Validate edge-case ordering and parser corner cases.
-3. Prepare decision point for compatibility bridge vs native-only storage.
+1. Implement parser, logical planning interface, and execution pipeline.
+2. Implement update pipeline with atomicity strategy.
+3. Add conformance tests for read and write semantics.
+
+### Phase 5: Runtime and Tooling
+
+1. Implement CLI workflows for import, query, and administration.
+2. Implement server mode and request execution lifecycle.
+3. Add operational checks, metrics hooks, and debug tooling.
+
+### Phase 6: Compatibility and Hardening
+
+1. Expand import/export compatibility with MillenniumDB artifacts.
+2. Run regression suites and larger benchmarks.
+3. Close parity gaps and publish stabilization checklist.
 
 ## Proposed Project and Document Structure
 
@@ -80,11 +94,17 @@ Project structure for the next steps:
 Code structure to create when implementation begins:
 
 1. crates/mdb-core (ObjectId, value model, comparison semantics)
-2. crates/mdb-index (quad indexes and permutation rules)
-3. crates/mdb-parser (input parsing and diagnostics)
-4. crates/mdb-query (minimal read query evaluation)
-5. crates/mdb-fixtures (shared small datasets for tests)
-6. tests/integration (end-to-end semantic checks)
+2. crates/mdb-storage (catalog, persistence, index management)
+3. crates/mdb-index (quad index permutations and lookup paths)
+4. crates/mdb-import (qm/csv import and validation)
+5. crates/mdb-export (dump and serialization paths)
+6. crates/mdb-query (parser, planner interfaces, execution)
+7. crates/mdb-update (insert/delete/update actions)
+8. crates/mdb-cli (command-line entry points)
+9. crates/mdb-server (server runtime)
+10. crates/mdb-fixtures (shared deterministic datasets)
+11. tests/integration (cross-subsystem semantic checks)
+12. tests/e2e (cli/server black-box checks)
 
 ## Initial Test Cases (No Production Code Yet)
 
@@ -104,9 +124,17 @@ Code structure to create when implementation begins:
 - Accept minimal valid input files.
 - Reject malformed tokens with expected diagnostic class.
 
-5. Minimal query behavior tests
-- Run deterministic point lookup and small pattern match.
+5. Query behavior tests
+- Run deterministic point lookup, pattern match, and filter scenarios.
 - Assert exact result set and ordering contract.
+
+6. Update behavior tests
+- Insert, delete, and modify edges/properties under deterministic fixtures.
+- Assert index consistency and visibility after updates.
+
+7. CLI and server smoke tests
+- Validate import/query flows through cli commands.
+- Validate one minimal server request lifecycle.
 
 See detailed cases in docs/testing/initial-test-cases.md.
 
@@ -119,6 +147,6 @@ See detailed cases in docs/testing/initial-test-cases.md.
 
 ## Immediate Next 3 Tasks
 
-1. Create the crate workspace skeleton without business logic.
-2. Implement only ObjectId data types and round-trip tests.
-3. Implement first in-memory index view and consistency tests.
+1. Create full crate workspace skeleton for all core subsystems.
+2. Implement ObjectId plus storage catalog metadata contracts and tests.
+3. Implement initial query/update smoke pipeline over quad indexes.
